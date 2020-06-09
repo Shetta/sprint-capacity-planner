@@ -31,7 +31,6 @@ def load_bank_holidays(file_dict, sheet_name):
             for i in range(0, load_max_col):
                 onerow[firstrow[i]] = row[i]
             all_rows.append(onerow)
-        print(keys)
         print(all_rows)
 
 
