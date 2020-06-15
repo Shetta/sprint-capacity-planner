@@ -70,14 +70,11 @@ def load_to_objects(object_class, full_file_name, sheet_name, load_max_col, load
     except:
         print("Unexpected error:", sys.exc_info()[0])
         return all_rows
-    for firstrow in sheet.iter_rows(min_row=1, max_row=1, min_col=0, max_col=load_max_col, values_only=True):
-        for key in firstrow:
-            keys.append(key)
     for row in sheet.iter_rows(min_row=2, max_row=load_max_row, min_col=0, max_col=load_max_col, values_only=True):
         one_object = object.__new__(object_class)
         i = 0
-        for field in fields(object_class):
-            one_object.__setattr__(field.name, row[i])
+        for field, field_value in zip(fields(object_class), row):
+            one_object.__setattr__(field.name, field_value)
             i = i + 1
 
         all_rows.append(one_object)
