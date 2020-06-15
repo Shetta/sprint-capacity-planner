@@ -1,6 +1,6 @@
 # Sprint Capacity Planner class definitions
 import datetime
-from dataclasses import dataclass
+from dataclasses import astuple, dataclass
 
 
 @dataclass

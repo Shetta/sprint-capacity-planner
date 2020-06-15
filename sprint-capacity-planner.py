@@ -3,7 +3,7 @@ import datetime
 import time
 import openpyxl
 import sys
-
+from dataclasses import fields
 
 # local include files
 import credentials as cr
@@ -50,7 +50,7 @@ def load_dictionary(full_file_name, sheet_name, load_max_col, load_max_row=50):
     return all_rows
 
 
-def load_to_objects(full_file_name, sheet_name, load_max_col, load_max_row=50):
+def load_to_objects(object_class, full_file_name, sheet_name, load_max_col, load_max_row=50, ):
     xlsfile = full_file_name['path'] + '/' + full_file_name['filename']
     all_rows = []
     if load_max_col < 1:
@@ -74,10 +74,14 @@ def load_to_objects(full_file_name, sheet_name, load_max_col, load_max_row=50):
         for key in firstrow:
             keys.append(key)
     for row in sheet.iter_rows(min_row=2, max_row=load_max_row, min_col=0, max_col=load_max_col, values_only=True):
-        onerow = {}
-        for i in range(0, load_max_col):
-            onerow[firstrow[i]] = row[i]
-        all_rows.append(onerow)
+        one_object = object.__new__(object_class)
+        i = 0
+        for field in fields(object_class):
+            one_object.__setattr__(field.name, row[i])
+            i = i + 1
+
+        all_rows.append(one_object)
+
     return all_rows
 
 
@@ -94,13 +98,26 @@ def load_all():
     defaults = load_dictionary(cr.testexcelfile, 'Defaults', 2)
 
 
+def load_all_to_object():
+    global bank_holidays
+    global vacations
+    global developers
+    global sprints
+    global defaults
+    bank_holidays = load_to_objects(BankHoliday, cr.testexcelfile, 'Bank holidays', 3, 100)
+    vacations = load_to_objects(Vacation, cr.testexcelfile, 'Vacations', 16, 200)
+    developers = load_to_objects(Developer, cr.testexcelfile, 'Developers', 5)
+    sprints = load_to_objects(Sprint, cr.testexcelfile, 'Sprints', 7, 100)
+    defaults = load_to_objects(Default, cr.testexcelfile, 'Defaults', 2)
+
+
 if __name__ == '__main__':
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
     print("#####----------------------------------#####")
-    developer = Developer('Bela', 'HU', 1, None, None)
-    print(developer)
-    load_all()
+
+    load_all_to_object()
+
     print("#####----------------------------------#####")
     print("--- Execution time: %s seconds ---" % (time.time() - start_time))
 
