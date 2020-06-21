@@ -5,6 +5,7 @@ import openpyxl
 import sys
 from dataclasses import fields
 import pandas as pd
+from decimal import Decimal
 
 # local include files
 import credentials as cr
@@ -98,7 +99,7 @@ def vacations_data_process(list_of_vacations, list_of_bank_holidays, list_of_emp
     list_of_employees = sorted(list_of_employees, key=lambda x: (x['Name']))
     for employee in list_of_employees:
         employee_bank_holidays = get_employee_bank_holidays(employee['Name'], list_of_employees, list_of_bank_holidays)
-        employee_obj = EmployeeVacation(employee['Name'], employee_bank_holidays)
+        employee_obj = EmployeeVacation(employee['Name'], employee_bank_holidays, employee['FTE'])
         filtered_vacations = [vac for vac in list_of_vacations if vac['EMPLOYEE'] == employee['Name']]
         for vacation_record in filtered_vacations:
             start_date_date = vacation_record['START DATE']
@@ -186,9 +187,46 @@ def sprints_data_process(list_of_sprints, list_of_employee_vacations):
         for single_date in date_range:
             for vacation_obj in list_of_employee_vacations:
                 if vacation_obj.is_on_holiday(single_date):
-                    sprint_details_obj.add_employee_on_holiday(single_date, vacation_obj.name)
+                    sprint_details_obj.add_employee_on_holiday(single_date, vacation_obj.name, vacation_obj.fte)
+                else:
+                    sprint_details_obj.add_employee_available(single_date, vacation_obj.name, vacation_obj.fte)
         list_of_sprint_details.append(sprint_details_obj)
     return list_of_sprint_details
+
+
+def validate_employees_list(list_of_employees):
+    data_error = False
+    for employee in list_of_employees:
+        if employee['Start date on project'] is None:
+            print('ERROR!', employee['Name'], ': start date cannot be empty!')
+            data_error = True
+        if employee['End date on project'] is not None and (employee['End date on project'] < employee['Start date on project']):
+            print('ERROR!', employee['Name'], ': end date(', employee['End date on project'].date(),
+                  ') cannot be earlier than start date (', employee['Start date on project'].date(), ')!')
+            data_error = True
+    return data_error
+
+
+def test1():
+    global employee_vacations_list
+    for employee_obj in employee_vacations_list:
+        # employee_obj.print_all_vacations()
+        print(employee_obj)
+
+
+def test2():
+    global sprint_details_list
+    for sprint_detail in sprint_details_list:
+        # print(sprint_detail)
+        print(sprint_detail.sprint, sprint_detail.start_date.date(), sprint_detail.end_date.date(),
+              sprint_detail.get_total_fte_available(), sprint_detail.get_total_fte_on_holiday(),
+              sprint_detail.get_sprint_capacity())
+
+
+def test3():
+    global developers_list, bank_holidays_list, employee_vacations_list
+    print(get_employee_bank_holidays('Garra Peters', developers_list, bank_holidays_list))
+    print(employee_vacations_list)
 
 
 if __name__ == '__main__':
@@ -196,17 +234,14 @@ if __name__ == '__main__':
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
     print("#####----------------------------------#####")
     load_all_to_dict()
+    if validate_employees_list(developers_list):
+        exit(-1)
     employee_vacations_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
-    # for employee_obj in employee_vacations_list:
-    #    employee_obj.print_all_vacations()
+    # test1()
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
+    x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_vacations_list)
-    for sprint_detail in sprint_details_list:
-        print(sprint_detail)
-        print(sprint_detail.members_on_holiday)
-    #print(get_employee_bank_holidays('Garra Peters', developers_list, bank_holidays_list))
-    #print(employee_vacations_list)
-    x_date = datetime.date(datetime.date.today().year, 8, 18)
+    test2()
     #print(x_date)
     #print(who_is_on_holiday(x_date))
 

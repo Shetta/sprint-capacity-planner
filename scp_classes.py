@@ -1,7 +1,7 @@
 # Sprint Capacity Planner class definitions
 import datetime
 from dataclasses import dataclass, field
-#from typing import List
+from decimal import Decimal
 import pandas as pd
 
 
@@ -19,6 +19,17 @@ class BankHoliday:
         if isinstance(datetime_date, datetime.datetime):
             datetime_date = datetime_date.date()
         return next((item for item in self.dates if item['date'] == datetime_date), None)
+
+    def is_holiday_in_country(self, datetime_date, country):
+        if isinstance(datetime_date, datetime.datetime):
+            datetime_date = datetime_date.date()
+        holiday_bool = False
+        for item in self.dates:
+            if item['date'] == datetime_date:
+                for holiday_country in item['countries']:
+                    if holiday_country == country:
+                        holiday_bool = True
+        return holiday_bool
 
 
 @dataclass
@@ -54,6 +65,7 @@ class Vacation:
 class EmployeeVacation:
     name: str
     vacation_days: list
+    fte: float
 
     def add_vacations_from_range(self, range_start, range_end):
         date_range = pd.bdate_range(range_start, range_end)
@@ -72,8 +84,10 @@ class EmployeeVacation:
         for vacation in self.vacation_days:
             print(vacation)
 
-    def is_on_holiday(self, daytime_date):
-        if daytime_date in self.vacation_days:
+    def is_on_holiday(self, datetime_date):
+        if isinstance(datetime_date, datetime.datetime):
+            datetime_date = datetime_date.date()
+        if datetime_date in self.vacation_days:
             return True
         else:
             return False
@@ -102,24 +116,65 @@ class SprintDetails:
     end_date: datetime.datetime
     dev_team_size_UK: float
     dev_team_size_HU: float
-    dev_team_size_total: float = 0.0
+    dev_team_size_total: float = 0
     workdays_in_sprint: int = 0
-    capacity: float = 0.0
     members_on_holiday: list = field(init=False, repr=False)
-    headcount_on_holiday: list = field(init=False, repr=False)
+    members_available: list = field(init=False, repr=False)
+    fte_on_holiday: list = field(init=False, repr=False)
+    fte_available: list = field(init=False, repr=False)
 
     def __post_init__(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
-        self.workdays_in_sprint = len(pd.bdate_range(start=self.start_date, end=self.end_date))
+        workdays_range = pd.bdate_range(start=self.start_date, end=self.end_date)
+        self.workdays_in_sprint = len(workdays_range)
         self.members_on_holiday = []
-        self.headcount_on_holiday = []
+        self.members_available = []
+        self.fte_on_holiday = []
+        self.fte_available = []
+        for date in workdays_range:
+            if isinstance(date, pd.Timestamp):
+                date = date.date()
+            self.fte_on_holiday.append({'date': date, 'fte': 0})
+            self.fte_available.append({'date': date, 'fte': 0})
 
     def get_dev_team_size_total(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
         return self.dev_team_size_total
 
-    def add_employee_on_holiday(self, date, name):
+    def add_employee_on_holiday(self, date, name, fte):
         if isinstance(date, pd.Timestamp):
             date = date.date()
         self.members_on_holiday.append({'date': date, 'name': name})
+        index = 0
+        for item in self.fte_on_holiday:
+            if item['date'] == date:
+                self.fte_on_holiday[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
+            index += 1
 
+    def add_employee_available(self, date, name, fte):
+        if isinstance(date, pd.Timestamp):
+            date = date.date()
+        self.members_available.append({'date': date, 'name': name})
+        index = 0
+        for item in self.fte_available:
+            if item['date'] == date:
+                self.fte_available[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
+            index += 1
+
+    def get_total_fte_available(self):
+        total_fte = 0.0
+        for item in self.fte_available:
+            total_fte = float(format(Decimal.from_float(total_fte + item['fte']), '.2f'))
+        return total_fte
+
+    def get_total_fte_on_holiday(self):
+        total_fte = 0.0
+        for item in self.fte_on_holiday:
+            total_fte = float(format(Decimal.from_float(total_fte + item['fte']), '.2f'))
+        return total_fte
+
+    def get_sprint_capacity(self):
+        total_fte_available = self.get_total_fte_available()
+        sprint_capacity = total_fte_available / (total_fte_available + self.get_total_fte_on_holiday())
+        sprint_capacity = float(format(Decimal.from_float(sprint_capacity), '.2f'))
+        return sprint_capacity
