@@ -18,6 +18,7 @@ bank_holidays_list = []
 developers_list = []
 sprints_list = []
 defaults_list = []
+employee_obj_list = []
 vacations_obj = []
 bank_holidays_obj = []
 developers_obj = []
@@ -171,7 +172,7 @@ def load_all_to_dict():
 
 
 def load_all_to_object():
-    global developers_obj
+    # global developers_obj
     global sprints_obj
     global defaults_obj
     # developers_obj = load_to_objects(Developer, cr.testexcelfile, 'Developers', 5)
@@ -253,6 +254,13 @@ def test4():
     print(x_date, emp1.is_available(x_date))
 
 
+def employee_data_process(list_of_employees, list_of_vacations, obj_of_holidays):
+    list_of_employee_objects = []
+    for employee in list_of_employees:
+        pass
+    return list_of_employee_objects
+
+
 if __name__ == '__main__':
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
@@ -265,6 +273,7 @@ if __name__ == '__main__':
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_vacations_list)
+    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_obj)
     test4()
     #print(x_date)
     #print(who_is_on_holiday(x_date))
