@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 import pandas as pd
 
+from scp_mapping import EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE
+
 
 @dataclass
 class Default:
@@ -120,8 +122,8 @@ class SprintDetails:
     workdays_in_sprint: int = 0
     members_on_holiday: list = field(init=False, repr=False)
     members_available: list = field(init=False, repr=False)
-    fte_on_holiday: list = field(init=False, repr=False)
-    fte_available: list = field(init=False, repr=False)
+    fte_on_holiday: list = field(init=False)
+    fte_available: list = field(init=False)
 
     def __post_init__(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
@@ -178,3 +180,56 @@ class SprintDetails:
         sprint_capacity = total_fte_available / (total_fte_available + self.get_total_fte_on_holiday())
         sprint_capacity = float(format(Decimal.from_float(sprint_capacity), '.2f'))
         return sprint_capacity
+
+
+@dataclass
+class Employee:
+    name: str
+    country: str
+    fte: float
+    start_date_on_project: datetime.datetime
+    end_date_on_project: datetime.datetime
+    vacations: list = field(init=False)
+    sick_leaves: list = field(init=False)
+    extra_working_days: list = field(init=False)
+
+    def __post_init__(self):
+        self.vacations = []
+        self.sick_leaves = []
+        self.extra_working_days = []
+
+    def add_vacation(self, single_date):
+        if isinstance(single_date, datetime.datetime):
+            single_date = single_date.date()
+        self.vacations.append(single_date)
+        self.vacations.sort()
+
+    def add_sick_leave(self, single_date):
+        if isinstance(single_date, datetime.datetime):
+            single_date = single_date.date()
+        self.sick_leaves.append(single_date)
+        self.sick_leaves.sort()
+
+    def add_extra_working_day(self, single_date):
+        if isinstance(single_date, datetime.datetime):
+            single_date = single_date.date()
+        self.extra_working_days.append(single_date)
+        self.extra_working_days.sort()
+
+    def is_available(self, single_date):
+        employee_available = False
+        if isinstance(single_date, datetime.datetime):
+            single_date = single_date.date()
+        if single_date >= self.start_date_on_project.date() and \
+                (self.end_date_on_project is None or self.end_date_on_project.date() >= single_date):
+            if single_date in self.vacations or single_date in self.sick_leaves:
+                employee_available = False
+            else:
+                if single_date.weekday() >= 5:
+                    if single_date in self.extra_working_days:
+                        employee_available = True
+                    else:
+                        employee_available = False
+                else:
+                    employee_available = True
+        return employee_available

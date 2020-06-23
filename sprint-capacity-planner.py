@@ -9,7 +9,8 @@ from decimal import Decimal
 
 # local include files
 import credentials as cr
-from scp_classes import Default, BankHoliday, Developer, Sprint, EmployeeVacation, SprintDetails
+from scp_classes import Default, BankHoliday, Developer, Sprint, EmployeeVacation, SprintDetails, Employee
+from scp_mapping import EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE
 
 # global variables
 vacations_list = []
@@ -173,7 +174,7 @@ def load_all_to_object():
     global developers_obj
     global sprints_obj
     global defaults_obj
-    developers_obj = load_to_objects(Developer, cr.testexcelfile, 'Developers', 5)
+    # developers_obj = load_to_objects(Developer, cr.testexcelfile, 'Developers', 5)
     sprints_obj = load_to_objects(Sprint, cr.testexcelfile, 'Sprints', 7, 100)
     defaults_obj = load_to_objects(Default, cr.testexcelfile, 'Defaults', 2)
 
@@ -229,6 +230,29 @@ def test3():
     print(employee_vacations_list)
 
 
+def test4():
+    emp1 = Employee('Bela', 'HU', 1, datetime.datetime(2019, 12, 25, 10, 11), datetime.datetime(2020, 8, 1, 10, 11))
+    emp1.add_vacation(datetime.datetime(2020, 7, 25, 10, 11))
+    emp1.add_sick_leave(datetime.datetime(2020, 6, 25, 10, 11))
+    emp1.add_vacation(datetime.datetime(2020, 6, 24, 10, 11))
+    emp1.add_vacation(datetime.datetime(2020, 8, 3, 10, 11))
+    emp1.add_extra_working_day(datetime.date(2020, 6, 13))
+    emp1.add_extra_working_day(datetime.date(2020, 6, 27))
+    emp1.add_extra_working_day(datetime.date(2020, 6, 20))
+    x_date = datetime.date(2020, 6, 23)
+    print(x_date, emp1.is_available(x_date))
+    x_date = datetime.date(2020, 6, 24)
+    print(x_date, emp1.is_available(x_date))
+    x_date = datetime.date(2020, 6, 25)
+    print(x_date, emp1.is_available(x_date))
+    x_date = datetime.date(2020, 6, 27)
+    print(x_date, emp1.is_available(x_date))
+    x_date = datetime.date(2019, 6, 28)
+    print(x_date, emp1.is_available(x_date))
+    x_date = datetime.date(2020, 8, 2)
+    print(x_date, emp1.is_available(x_date))
+
+
 if __name__ == '__main__':
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
@@ -241,7 +265,7 @@ if __name__ == '__main__':
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_vacations_list)
-    test2()
+    test4()
     #print(x_date)
     #print(who_is_on_holiday(x_date))
 

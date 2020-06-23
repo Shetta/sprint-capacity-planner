@@ -1,0 +1,8 @@
+# Mapping values to meaningful names
+
+# Employee statuses
+EMPLOYEE_UNKNOWN = 99
+EMPLOYEE_AVAILABLE = 1
+EMPLOYEE_ON_VACATION = 2
+EMPLOYEE_ON_SICK_LEAVE = 3
+EMPLOYEE_NOT_ON_PROJECT = 4
