@@ -192,11 +192,13 @@ class Employee:
     vacations: list = field(init=False)
     sick_leaves: list = field(init=False)
     extra_working_days: list = field(init=False)
+    bank_holidays: list = field(init=False)
 
     def __post_init__(self):
         self.vacations = []
         self.sick_leaves = []
         self.extra_working_days = []
+        self.bank_holidays = []
 
     def add_vacation(self, single_date):
         if isinstance(single_date, datetime.datetime):
@@ -220,6 +222,12 @@ class Employee:
         for single_date in date_range:
             self.add_sick_leave(single_date.date())
 
+    def add_bank_holiday(self, single_date):
+        if isinstance(single_date, datetime.datetime):
+            single_date = single_date.date()
+        self.bank_holidays.append(single_date)
+        self.bank_holidays.sort()
+
     def add_extra_working_day(self, single_date):
         if isinstance(single_date, datetime.datetime):
             single_date = single_date.date()
@@ -232,7 +240,7 @@ class Employee:
             single_date = single_date.date()
         if single_date >= self.start_date_on_project.date() and \
                 (self.end_date_on_project is None or self.end_date_on_project.date() >= single_date):
-            if single_date in self.vacations or single_date in self.sick_leaves:
+            if single_date in self.vacations or single_date in self.sick_leaves or single_date in self.bank_holidays:
                 employee_available = False
             else:
                 if single_date.weekday() >= 5:

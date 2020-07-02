@@ -10,7 +10,7 @@ from decimal import Decimal
 # local include files
 import credentials as cr
 from scp_classes import Default, BankHoliday, Developer, Sprint, EmployeeVacation, SprintDetails, Employee
-from scp_mapping import EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE
+from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE
 
 # global variables
 vacations_list = []
@@ -259,14 +259,39 @@ def test4():
 
 def test5():
     global employee_obj_list
+    x_date = datetime.date(2020, 3, 2)
     for item in employee_obj_list:
-        print(item)
+        print(item.name, x_date, 'available:', item.is_available(x_date))
 
 
-def employee_data_process(list_of_employees, list_of_vacations, obj_of_holidays, list_of_extra_sick_leaves):
+def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves):
     list_of_employee_objects = []
     for employee in list_of_employees:
         employee_obj = Employee(employee['Name'], employee['Country'], employee['FTE'], employee['Start date on project'], employee['End date on project'])
+        filtered_vacations = [vac for vac in list_of_vacations if vac['EMPLOYEE'] == employee['Name']]
+        for vacation_record in filtered_vacations:
+            start_date_date = vacation_record['START DATE']
+            if isinstance(start_date_date, datetime.datetime):
+                start_date_date = start_date_date.date()
+            end_date_date = vacation_record['END DATE']
+            if isinstance(end_date_date, datetime.datetime):
+                end_date_date = end_date_date.date()
+            if vacation_record['VACATION TYPE'] == VACATION_TYPE_SICK_LEAVE:
+                employee_obj.add_sick_leaves_from_range(start_date_date, end_date_date)
+            else:
+                employee_obj.add_vacations_from_range(start_date_date, end_date_date)
+        filtered_sick_leaves = [leave for leave in list_of_extra_sick_leaves if leave['Name'] == employee['Name']]
+        for sick_leave_record in filtered_sick_leaves:
+            start_date_date = sick_leave_record['Start date']
+            if isinstance(start_date_date, datetime.datetime):
+                start_date_date = start_date_date.date()
+            end_date_date = sick_leave_record['End date']
+            if isinstance(end_date_date, datetime.datetime):
+                end_date_date = end_date_date.date()
+            employee_obj.add_sick_leaves_from_range(start_date_date, end_date_date)
+        filtered_bank_holidays = [bank_holiday for bank_holiday in list_of_bank_holidays if bank_holiday['Country'] == employee['Country']]
+        for bank_holiday_record in filtered_bank_holidays:
+            employee_obj.add_bank_holiday(bank_holiday_record['Date'])
         list_of_employee_objects.append(employee_obj)
     return list_of_employee_objects
 
@@ -283,7 +308,7 @@ if __name__ == '__main__':
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
-    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_obj, extra_sick_leaves_list)
+    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list, extra_sick_leaves_list)
     test5()
 
     #print(bank_holidays_obj)
