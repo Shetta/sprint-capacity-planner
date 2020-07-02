@@ -14,6 +14,7 @@ from scp_mapping import EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATI
 
 # global variables
 vacations_list = []
+extra_sick_leaves_list = []
 bank_holidays_list = []
 developers_list = []
 sprints_list = []
@@ -24,7 +25,7 @@ bank_holidays_obj = []
 developers_obj = []
 sprints_obj = []
 defaults_obj = []
-employee_vacations_list = []
+employee_leaves_list = []
 
 start_time = time.time()
 
@@ -95,7 +96,7 @@ def load_to_objects(object_class, full_file_name, sheet_name, load_max_col, load
 
 
 def vacations_data_process(list_of_vacations, list_of_bank_holidays, list_of_employees):
-    list_of_employee_vacations = []
+    list_of_employee_leaves = []
     list_of_vacations = sorted(list_of_vacations, key=lambda x: (x['EMPLOYEE'], x['START DATE']))
     list_of_bank_holidays = sorted(list_of_bank_holidays, key=lambda x: (x['Date']))
     list_of_employees = sorted(list_of_employees, key=lambda x: (x['Name']))
@@ -111,8 +112,8 @@ def vacations_data_process(list_of_vacations, list_of_bank_holidays, list_of_emp
             if isinstance(end_date_date, datetime.datetime):
                 end_date_date = end_date_date.date()
             employee_obj.add_vacations_from_range(start_date_date, end_date_date)
-        list_of_employee_vacations.append(employee_obj)
-    return list_of_employee_vacations
+        list_of_employee_leaves.append(employee_obj)
+    return list_of_employee_leaves
 
 
 def bank_holidays_data_process(list_of_bank_holidays):
@@ -139,8 +140,8 @@ def bank_holidays_data_process(list_of_bank_holidays):
 
 def who_is_on_holiday(datetime_date):
     on_holiday = []
-    global employee_vacations_list
-    for employee in employee_vacations_list:
+    global employee_leaves_list
+    for employee in employee_leaves_list:
         if employee.is_on_holiday(datetime_date):
             on_holiday.append(employee.name)
     return on_holiday
@@ -164,11 +165,13 @@ def load_all_to_dict():
     global developers_list
     global sprints_list
     global defaults_list
+    global extra_sick_leaves_list
     bank_holidays_list = load_to_dictionary(cr.testexcelfile, 'Bank holidays', 3, 100)
     vacations_list = load_to_dictionary(cr.testexcelfile, 'Vacations', 16, 200)
     developers_list = load_to_dictionary(cr.testexcelfile, 'Developers', 5)
     sprints_list = load_to_dictionary(cr.testexcelfile, 'Sprints', 7, 100)
     defaults_list = load_to_dictionary(cr.testexcelfile, 'Defaults', 2)
+    extra_sick_leaves_list = load_to_dictionary(cr.testexcelfile, 'Extra sick leave', 3)
 
 
 def load_all_to_object():
@@ -210,8 +213,8 @@ def validate_employees_list(list_of_employees):
 
 
 def test1():
-    global employee_vacations_list
-    for employee_obj in employee_vacations_list:
+    global employee_leaves_list
+    for employee_obj in employee_leaves_list:
         # employee_obj.print_all_vacations()
         print(employee_obj)
 
@@ -226,9 +229,9 @@ def test2():
 
 
 def test3():
-    global developers_list, bank_holidays_list, employee_vacations_list
+    global developers_list, bank_holidays_list, employee_leaves_list
     print(get_employee_bank_holidays('Garra Peters', developers_list, bank_holidays_list))
-    print(employee_vacations_list)
+    print(employee_leaves_list)
 
 
 def test4():
@@ -254,10 +257,17 @@ def test4():
     print(x_date, emp1.is_available(x_date))
 
 
-def employee_data_process(list_of_employees, list_of_vacations, obj_of_holidays):
+def test5():
+    global employee_obj_list
+    for item in employee_obj_list:
+        print(item)
+
+
+def employee_data_process(list_of_employees, list_of_vacations, obj_of_holidays, list_of_extra_sick_leaves):
     list_of_employee_objects = []
     for employee in list_of_employees:
-        pass
+        employee_obj = Employee(employee['Name'], employee['Country'], employee['FTE'], employee['Start date on project'], employee['End date on project'])
+        list_of_employee_objects.append(employee_obj)
     return list_of_employee_objects
 
 
@@ -268,15 +278,13 @@ if __name__ == '__main__':
     load_all_to_dict()
     if validate_employees_list(developers_list):
         exit(-1)
-    employee_vacations_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
+    employee_leaves_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
     # test1()
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     x_date = datetime.date(2020, 12, 25)
-    sprint_details_list = sprints_data_process(sprints_list, employee_vacations_list)
-    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_obj)
-    test4()
-    #print(x_date)
-    #print(who_is_on_holiday(x_date))
+    sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
+    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_obj, extra_sick_leaves_list)
+    test5()
 
     #print(bank_holidays_obj)
     #print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))

@@ -204,11 +204,21 @@ class Employee:
         self.vacations.append(single_date)
         self.vacations.sort()
 
+    def add_vacations_from_range(self, range_start, range_end):
+        date_range = pd.bdate_range(range_start, range_end)
+        for single_date in date_range:
+            self.add_vacation(single_date.date())
+
     def add_sick_leave(self, single_date):
         if isinstance(single_date, datetime.datetime):
             single_date = single_date.date()
         self.sick_leaves.append(single_date)
         self.sick_leaves.sort()
+
+    def add_sick_leaves_from_range(self, range_start, range_end):
+        date_range = pd.bdate_range(range_start, range_end)
+        for single_date in date_range:
+            self.add_sick_leave(single_date.date())
 
     def add_extra_working_day(self, single_date):
         if isinstance(single_date, datetime.datetime):
