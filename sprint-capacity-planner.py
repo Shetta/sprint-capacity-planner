@@ -244,17 +244,17 @@ def test4():
     emp1.add_extra_working_day(datetime.date(2020, 6, 27))
     emp1.add_extra_working_day(datetime.date(2020, 6, 20))
     x_date = datetime.date(2020, 6, 23)
-    print(x_date, emp1.is_available(x_date))
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
     x_date = datetime.date(2020, 6, 24)
-    print(x_date, emp1.is_available(x_date))
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
     x_date = datetime.date(2020, 6, 25)
-    print(x_date, emp1.is_available(x_date))
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
     x_date = datetime.date(2020, 6, 27)
-    print(x_date, emp1.is_available(x_date))
-    x_date = datetime.date(2019, 6, 28)
-    print(x_date, emp1.is_available(x_date))
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
+    x_date = datetime.date(2020, 6, 28)
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
     x_date = datetime.date(2020, 8, 2)
-    print(x_date, emp1.is_available(x_date))
+    print(x_date, emp1.is_available(x_date), emp1.status(x_date))
 
 
 def test5():
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list, extra_sick_leaves_list)
-    test5()
+    test4()
 
     #print(bank_holidays_obj)
     #print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))
