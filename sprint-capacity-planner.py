@@ -10,7 +10,7 @@ from decimal import Decimal
 # local include files
 import credentials as cr
 from scp_classes import Default, BankHoliday, Developer, Sprint, EmployeeVacation, SprintDetails, Employee
-from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE
+from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_STATUS_TEXT
 
 # global variables
 vacations_list = []
@@ -259,9 +259,9 @@ def test4():
 
 def test5():
     global employee_obj_list
-    x_date = datetime.date(2020, 3, 2)
+    x_date = datetime.date(2020, 7, 9)
     for item in employee_obj_list:
-        print(item.name, x_date, 'available:', item.is_available(x_date))
+        print(item.name, x_date, 'available:', item.is_available(x_date), 'status:', EMPLOYEE_STATUS_TEXT[item.status(x_date)])
 
 
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves):
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list, extra_sick_leaves_list)
-    test4()
+    test5()
 
     #print(bank_holidays_obj)
     #print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))

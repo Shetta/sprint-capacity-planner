@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 import pandas as pd
 
-from scp_mapping import EMPLOYEE_UNKNOWN, EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, EMPLOYEE_ON_WEEKEND
+from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
 
 
 @dataclass
@@ -253,21 +253,21 @@ class Employee:
         return employee_available
 
     def status(self, single_date):
-        employee_status = EMPLOYEE_UNKNOWN
         if isinstance(single_date, datetime.datetime):
             single_date = single_date.date()
         if single_date >= self.start_date_on_project.date():
             if self.end_date_on_project is None or self.end_date_on_project.date() >= single_date:
-                if single_date in self.vacations or single_date in self.bank_holidays:
+                if single_date in self.vacations:
                     employee_status = EMPLOYEE_ON_VACATION
+                elif single_date in self.bank_holidays:
+                    employee_status = EMPLOYEE_ON_BANK_HOLIDAY
+                elif single_date in self.sick_leaves:
+                    employee_status = EMPLOYEE_ON_SICK_LEAVE
                 else:
-                    if single_date in self.sick_leaves:
-                        employee_status = EMPLOYEE_ON_SICK_LEAVE
+                    if single_date.weekday() < 5 or single_date in self.extra_working_days:
+                        employee_status = EMPLOYEE_AVAILABLE
                     else:
-                        if single_date.weekday() < 5 or single_date in self.extra_working_days:
-                            employee_status = EMPLOYEE_AVAILABLE
-                        else:
-                            employee_status = EMPLOYEE_ON_WEEKEND
+                        employee_status = EMPLOYEE_ON_WEEKEND
             else:
                 employee_status = EMPLOYEE_NOT_ON_PROJECT
         else:
