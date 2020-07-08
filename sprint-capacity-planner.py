@@ -9,7 +9,7 @@ from decimal import Decimal
 
 # local include files
 import credentials as cr
-from scp_classes import Default, BankHoliday, Developer, Sprint, EmployeeVacation, SprintDetails, Employee
+from scp_classes import Default, BankHoliday, Sprint, EmployeeVacation, Employee
 from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_STATUS_TEXT
 
 # global variables
@@ -189,8 +189,7 @@ def load_all_to_object():
 def sprints_data_process(list_of_sprints, list_of_employee_vacations):
     list_of_sprint_details = []
     for sprint in list_of_sprints:
-        sprint_details_obj = SprintDetails(sprint['Sprint'], sprint['Start date'], sprint['End date'],
-                                           sprint['Dev team size UK'], sprint['Dev team size HU'])
+        sprint_details_obj = Sprint(sprint['Sprint'], sprint['Start date'], sprint['End date'])
         date_range = pd.bdate_range(sprint['Start date'], sprint['End date'])
         for single_date in date_range:
             for vacation_obj in list_of_employee_vacations:
@@ -318,7 +317,6 @@ if __name__ == '__main__':
     employee_leaves_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
     # test1()
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
-    x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
                                               extra_sick_leaves_list, extra_working_days_list)

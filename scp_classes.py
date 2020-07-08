@@ -97,31 +97,15 @@ class EmployeeVacation:
 
 @dataclass
 class Sprint:
-    Sprint: str
-    Start_date: datetime.datetime
-    End_date: datetime.datetime
-    Workdays_in_sprint: int
-    Dev_team_size_UK: float
-    Dev_team_size_HU: float
-    Dev_team_size_total: float
-
-    def define_workday_dates(self):
-        date_range = pd.bdate_range(self.Start_date, self.End_date)
-        for single_date in date_range:
-            print(single_date.strftime("%Y-%m-%d"))
-
-
-@dataclass
-class SprintDetails:
     sprint: str
     start_date: datetime.datetime
     end_date: datetime.datetime
-    dev_team_size_UK: float
-    dev_team_size_HU: float
+    dev_team_size_UK: float = 0
+    dev_team_size_HU: float = 0
     dev_team_size_total: float = 0
     workdays_in_sprint: int = 0
-    members_on_holiday: list = field(init=False, repr=False)
-    members_available: list = field(init=False, repr=False)
+    members_on_holiday: list = field(init=False)
+    members_available: list = field(init=False)
     fte_on_holiday: list = field(init=False)
     fte_available: list = field(init=False)
 
