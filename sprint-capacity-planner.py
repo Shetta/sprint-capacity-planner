@@ -19,6 +19,7 @@ bank_holidays_list = []
 developers_list = []
 sprints_list = []
 defaults_list = []
+extra_working_days_list = []
 employee_obj_list = []
 vacations_obj = []
 bank_holidays_obj = []
@@ -166,12 +167,14 @@ def load_all_to_dict():
     global sprints_list
     global defaults_list
     global extra_sick_leaves_list
+    global extra_working_days_list
     bank_holidays_list = load_to_dictionary(cr.testexcelfile, 'Bank holidays', 3, 100)
     vacations_list = load_to_dictionary(cr.testexcelfile, 'Vacations', 16, 200)
     developers_list = load_to_dictionary(cr.testexcelfile, 'Developers', 5)
     sprints_list = load_to_dictionary(cr.testexcelfile, 'Sprints', 7, 100)
     defaults_list = load_to_dictionary(cr.testexcelfile, 'Defaults', 2)
     extra_sick_leaves_list = load_to_dictionary(cr.testexcelfile, 'Extra sick leave', 3)
+    extra_working_days_list = load_to_dictionary(cr.testexcelfile, 'Extra working days', 3)
 
 
 def load_all_to_object():
@@ -205,7 +208,8 @@ def validate_employees_list(list_of_employees):
         if employee['Start date on project'] is None:
             print('ERROR!', employee['Name'], ': start date cannot be empty!')
             data_error = True
-        if employee['End date on project'] is not None and (employee['End date on project'] < employee['Start date on project']):
+        if employee['End date on project'] is not None and (
+                employee['End date on project'] < employee['Start date on project']):
             print('ERROR!', employee['Name'], ': end date(', employee['End date on project'].date(),
                   ') cannot be earlier than start date (', employee['Start date on project'].date(), ')!')
             data_error = True
@@ -259,15 +263,18 @@ def test4():
 
 def test5():
     global employee_obj_list
-    x_date = datetime.date(2020, 7, 9)
+    x_date = datetime.date(2020, 12, 12)
     for item in employee_obj_list:
-        print(item.name, x_date, 'available:', item.is_available(x_date), 'status:', EMPLOYEE_STATUS_TEXT[item.status(x_date)])
+        print(item.name, x_date, 'available:', item.is_available(x_date), 'status:',
+              EMPLOYEE_STATUS_TEXT[item.status(x_date)])
 
 
-def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves):
+def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
+                          list_of_extra_working_days):
     list_of_employee_objects = []
     for employee in list_of_employees:
-        employee_obj = Employee(employee['Name'], employee['Country'], employee['FTE'], employee['Start date on project'], employee['End date on project'])
+        employee_obj = Employee(employee['Name'], employee['Country'], employee['FTE'],
+                                employee['Start date on project'], employee['End date on project'])
         filtered_vacations = [vac for vac in list_of_vacations if vac['EMPLOYEE'] == employee['Name']]
         for vacation_record in filtered_vacations:
             start_date_date = vacation_record['START DATE']
@@ -289,9 +296,14 @@ def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_hol
             if isinstance(end_date_date, datetime.datetime):
                 end_date_date = end_date_date.date()
             employee_obj.add_sick_leaves_from_range(start_date_date, end_date_date)
-        filtered_bank_holidays = [bank_holiday for bank_holiday in list_of_bank_holidays if bank_holiday['Country'] == employee['Country']]
+        filtered_bank_holidays = [bank_holiday for bank_holiday in list_of_bank_holidays if
+                                  bank_holiday['Country'] == employee['Country']]
         for bank_holiday_record in filtered_bank_holidays:
             employee_obj.add_bank_holiday(bank_holiday_record['Date'])
+        filtered_extra_working_days = [extra_working_day for extra_working_day in list_of_extra_working_days if
+                                       extra_working_day['Country'] == employee['Country']]
+        for extra_working_day_record in filtered_extra_working_days:
+            employee_obj.add_extra_working_day(extra_working_day_record['Date'])
         list_of_employee_objects.append(employee_obj)
     return list_of_employee_objects
 
@@ -308,14 +320,15 @@ if __name__ == '__main__':
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     x_date = datetime.date(2020, 12, 25)
     sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
-    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list, extra_sick_leaves_list)
+    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
+                                              extra_sick_leaves_list, extra_working_days_list)
     test5()
 
-    #print(bank_holidays_obj)
-    #print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))
-    #load_all_to_object()
+    # print(bank_holidays_obj)
+    # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))
+    # load_all_to_object()
 
-    #sp1 = sprints[0]
-    #sp1.define_workday_dates()
+    # sp1 = sprints[0]
+    # sp1.define_workday_dates()
     print("#####----------------------------------#####")
     print("--- Execution time: %s seconds ---" % (time.time() - start_time))
