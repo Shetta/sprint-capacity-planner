@@ -21,6 +21,7 @@ sprints_list = []
 defaults_list = []
 extra_working_days_list = []
 employee_obj_list = []
+sprint_obj_list = []
 vacations_obj = []
 bank_holidays_obj = []
 developers_obj = []
@@ -194,7 +195,7 @@ def sprints_data_process(list_of_sprints, list_of_employee_vacations):
         for single_date in date_range:
             for vacation_obj in list_of_employee_vacations:
                 if vacation_obj.is_on_holiday(single_date):
-                    sprint_details_obj.add_employee_on_holiday(single_date, vacation_obj.name, vacation_obj.fte)
+                    sprint_details_obj.add_employee_on_leave(single_date, vacation_obj.name, vacation_obj.fte)
                 else:
                     sprint_details_obj.add_employee_available(single_date, vacation_obj.name, vacation_obj.fte)
         list_of_sprint_details.append(sprint_details_obj)
@@ -227,7 +228,7 @@ def test2():
     for sprint_detail in sprint_details_list:
         # print(sprint_detail)
         print(sprint_detail.sprint, sprint_detail.start_date.date(), sprint_detail.end_date.date(),
-              sprint_detail.get_total_fte_available(), sprint_detail.get_total_fte_on_holiday(),
+              sprint_detail.get_total_fte_available(), sprint_detail.get_total_fte_on_leave(),
               sprint_detail.get_sprint_capacity())
 
 
@@ -266,6 +267,12 @@ def test5():
     for item in employee_obj_list:
         print(item.name, x_date, 'available:', item.is_available(x_date), 'status:',
               EMPLOYEE_STATUS_TEXT[item.status(x_date)])
+
+
+def test6():
+    global sprint_obj_list
+    for item in sprint_obj_list:
+        print(item.sprint, item.start_date.date(), item.end_date.date(), 'FTE available:', item.get_total_fte_available(), 'Capacity:', item.get_sprint_capacity())
 
 
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
@@ -307,6 +314,25 @@ def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_hol
     return list_of_employee_objects
 
 
+def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
+    list_of_sprint_obj = []
+    for sprint in list_of_sprints:
+        sprint_obj = Sprint(sprint['Sprint'], sprint['Start date'], sprint['End date'])
+        date_range = pd.date_range(sprint['Start date'], sprint['End date'])
+        for single_date in date_range:
+            for employee_obj in list_of_employee_obj:
+                if employee_obj.is_available(single_date):
+                    sprint_obj.add_employee_available(single_date, employee_obj.name, employee_obj.fte)
+                else:
+                    sprint_obj.add_employee_on_leave(single_date, employee_obj.name, employee_obj.fte)
+        list_of_sprint_obj.append(sprint_obj)
+    return list_of_sprint_obj
+
+
+def write_archive_sheet(list_of_sprint_obj, excel_file, sheet_name):
+    pass
+
+
 if __name__ == '__main__':
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
@@ -314,13 +340,15 @@ if __name__ == '__main__':
     load_all_to_dict()
     if validate_employees_list(developers_list):
         exit(-1)
-    employee_leaves_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
+    # employee_leaves_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
+    # sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
     # test1()
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
-    sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
                                               extra_sick_leaves_list, extra_working_days_list)
-    test5()
+    sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
+    write_archive_sheet(sprint_obj_list, cr.testexcelfile, 'Archive_List')
+    test6()
 
     # print(bank_holidays_obj)
     # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))

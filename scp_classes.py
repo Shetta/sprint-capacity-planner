@@ -104,37 +104,37 @@ class Sprint:
     dev_team_size_HU: float = 0
     dev_team_size_total: float = 0
     workdays_in_sprint: int = 0
-    members_on_holiday: list = field(init=False)
+    members_on_leave: list = field(init=False)
     members_available: list = field(init=False)
-    fte_on_holiday: list = field(init=False)
+    fte_on_leave: list = field(init=False)
     fte_available: list = field(init=False)
 
     def __post_init__(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
         workdays_range = pd.bdate_range(start=self.start_date, end=self.end_date)
         self.workdays_in_sprint = len(workdays_range)
-        self.members_on_holiday = []
+        self.members_on_leave = []
         self.members_available = []
-        self.fte_on_holiday = []
+        self.fte_on_leave = []
         self.fte_available = []
         for date in workdays_range:
             if isinstance(date, pd.Timestamp):
                 date = date.date()
-            self.fte_on_holiday.append({'date': date, 'fte': 0})
+            self.fte_on_leave.append({'date': date, 'fte': 0})
             self.fte_available.append({'date': date, 'fte': 0})
 
     def get_dev_team_size_total(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
         return self.dev_team_size_total
 
-    def add_employee_on_holiday(self, date, name, fte):
+    def add_employee_on_leave(self, date, name, fte):
         if isinstance(date, pd.Timestamp):
             date = date.date()
-        self.members_on_holiday.append({'date': date, 'name': name})
+        self.members_on_leave.append({'date': date, 'name': name})
         index = 0
-        for item in self.fte_on_holiday:
+        for item in self.fte_on_leave:
             if item['date'] == date:
-                self.fte_on_holiday[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
+                self.fte_on_leave[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
             index += 1
 
     def add_employee_available(self, date, name, fte):
@@ -153,15 +153,15 @@ class Sprint:
             total_fte = float(format(Decimal.from_float(total_fte + item['fte']), '.2f'))
         return total_fte
 
-    def get_total_fte_on_holiday(self):
+    def get_total_fte_on_leave(self):
         total_fte = 0.0
-        for item in self.fte_on_holiday:
+        for item in self.fte_on_leave:
             total_fte = float(format(Decimal.from_float(total_fte + item['fte']), '.2f'))
         return total_fte
 
     def get_sprint_capacity(self):
         total_fte_available = self.get_total_fte_available()
-        sprint_capacity = total_fte_available / (total_fte_available + self.get_total_fte_on_holiday())
+        sprint_capacity = total_fte_available / (total_fte_available + self.get_total_fte_on_leave())
         sprint_capacity = float(format(Decimal.from_float(sprint_capacity), '.2f'))
         return sprint_capacity
 
