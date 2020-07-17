@@ -11,6 +11,8 @@ from decimal import Decimal
 import credentials as cr
 from scp_classes import Default, BankHoliday, Sprint, EmployeeVacation, Employee
 from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_STATUS_TEXT
+from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, \
+    EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
 
 # global variables
 vacations_list = []
@@ -272,7 +274,14 @@ def test5():
 def test6():
     global sprint_obj_list
     for item in sprint_obj_list:
-        print(item.sprint, item.start_date.date(), item.end_date.date(), 'FTE available:', item.get_total_fte_available(), 'Capacity:', item.get_sprint_capacity())
+        print(item.sprint, item.start_date.date(), item.end_date.date(), 'FTE available:',
+              item.get_total_fte_available(), 'FTE on leave:', item.get_total_fte_on_leave(),
+              'Capacity:', item.get_sprint_capacity())
+        if item.sprint == "Sprint 55":
+            for member in item.members_available:
+                print(member)
+            for fte_date in item.fte_available:
+                print(fte_date)
 
 
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
@@ -323,7 +332,8 @@ def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
             for employee_obj in list_of_employee_obj:
                 if employee_obj.is_available(single_date):
                     sprint_obj.add_employee_available(single_date, employee_obj.name, employee_obj.fte)
-                else:
+                elif employee_obj.status(single_date) in (
+                        EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_ON_BANK_HOLIDAY):
                     sprint_obj.add_employee_on_leave(single_date, employee_obj.name, employee_obj.fte)
         list_of_sprint_obj.append(sprint_obj)
     return list_of_sprint_obj

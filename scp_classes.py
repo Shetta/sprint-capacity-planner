@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 import pandas as pd
 
-from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
+from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, \
+    EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
 
 
 @dataclass
@@ -117,7 +118,7 @@ class Sprint:
         self.members_available = []
         self.fte_on_leave = []
         self.fte_available = []
-        for date in workdays_range:
+        for date in pd.date_range(start=self.start_date, end=self.end_date):
             if isinstance(date, pd.Timestamp):
                 date = date.date()
             self.fte_on_leave.append({'date': date, 'fte': 0})
@@ -130,21 +131,23 @@ class Sprint:
     def add_employee_on_leave(self, date, name, fte):
         if isinstance(date, pd.Timestamp):
             date = date.date()
-        self.members_on_leave.append({'date': date, 'name': name})
+        self.members_on_leave.append({'date': date, 'name': name, 'fte': fte})
         index = 0
         for item in self.fte_on_leave:
             if item['date'] == date:
-                self.fte_on_leave[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
+                self.fte_on_leave[index] = {'date': date,
+                                            'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
             index += 1
 
     def add_employee_available(self, date, name, fte):
         if isinstance(date, pd.Timestamp):
             date = date.date()
-        self.members_available.append({'date': date, 'name': name})
+        self.members_available.append({'date': date, 'name': name, 'fte': fte})
         index = 0
         for item in self.fte_available:
             if item['date'] == date:
-                self.fte_available[index] = {'date': date, 'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
+                self.fte_available[index] = {'date': date,
+                                             'fte': float(format(Decimal.from_float(item['fte'] + fte), '.2f'))}
             index += 1
 
     def get_total_fte_available(self):
@@ -257,4 +260,3 @@ class Employee:
         else:
             employee_status = EMPLOYEE_NOT_ON_PROJECT
         return employee_status
-
