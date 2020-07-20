@@ -270,12 +270,13 @@ def test6():
     for item in sprint_obj_list:
         print(item.sprint, item.start_date.date(), item.end_date.date(), 'FTE available:',
               item.get_total_fte_available(), 'FTE on leave:', item.get_total_fte_on_leave(),
-              'Capacity:', item.get_sprint_capacity())
-        if item.sprint == "Sprint 55":
-            for member in item.members_available:
-                print(member)
-            for fte_date in item.fte_available:
-                print(fte_date)
+              'Capacity:', item.get_sprint_capacity(),
+              'Dev team size:', item.get_dev_team_size_total())
+        # if item.sprint == "Sprint 55":
+        #     for member in item.members_available:
+        #         print(member)
+        #     for fte_date in item.fte_available:
+        #         print(fte_date)
 
 
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
@@ -321,10 +322,16 @@ def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
     list_of_sprint_obj = []
     for sprint in list_of_sprints:
         sprint_obj = Sprint(sprint['Sprint'], sprint['Start date'], sprint['End date'])
-        date_range = pd.date_range(sprint['Start date'], sprint['End date'])
-        workdays_in_sprint = len(pd.bdate_range(sprint['Start date'], sprint['End date']))
-        for single_date in date_range:
-            for employee_obj in list_of_employee_obj:
+        date_range = pd.date_range(sprint_obj.start_date, sprint_obj.end_date)
+        for employee_obj in list_of_employee_obj:
+            if employee_obj.country == 'HU':
+                sprint_obj.add_to_dev_team_size_hu(
+                    employee_obj.get_nominal_fte_in_date_range(sprint_obj.start_date, sprint_obj.end_date))
+            elif employee_obj.country == 'UK':
+                sprint_obj.add_to_dev_team_size_uk(
+                    employee_obj.get_nominal_fte_in_date_range(sprint_obj.start_date, sprint_obj.end_date))
+
+            for single_date in date_range:
                 if employee_obj.is_available(single_date):
                     sprint_obj.add_employee_available(single_date, employee_obj.name, employee_obj.fte)
                 elif employee_obj.status(single_date) in (
@@ -353,8 +360,7 @@ if __name__ == '__main__':
                                               extra_sick_leaves_list, extra_working_days_list)
     sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
     write_archive_sheet(sprint_obj_list, cr.testexcelfile, 'Archive_List')
-    # test6()
-    test4()
+    test6()
 
     # print(bank_holidays_obj)
     # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))

@@ -124,6 +124,12 @@ class Sprint:
             self.fte_on_leave.append({'date': date, 'fte': 0})
             self.fte_available.append({'date': date, 'fte': 0})
 
+    def add_to_dev_team_size_uk(self, nominal_fte):
+        self.dev_team_size_UK = self.dev_team_size_UK + nominal_fte
+
+    def add_to_dev_team_size_hu(self, nominal_fte):
+        self.dev_team_size_HU = self.dev_team_size_HU + nominal_fte
+
     def get_dev_team_size_total(self):
         self.dev_team_size_total = self.dev_team_size_HU + self.dev_team_size_UK
         return self.dev_team_size_total
@@ -163,8 +169,7 @@ class Sprint:
         return total_fte
 
     def get_sprint_capacity(self):
-        total_fte_available = self.get_total_fte_available()
-        sprint_capacity = total_fte_available / (total_fte_available + self.get_total_fte_on_leave())
+        sprint_capacity = self.get_total_fte_available() / (self.workdays_in_sprint * self.get_dev_team_size_total())
         sprint_capacity = float(format(Decimal.from_float(sprint_capacity), '.2f'))
         return sprint_capacity
 
