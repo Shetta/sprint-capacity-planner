@@ -260,3 +260,18 @@ class Employee:
         else:
             employee_status = EMPLOYEE_NOT_ON_PROJECT
         return employee_status
+
+    def get_nominal_fte_in_date_range(self, start_date, end_date):
+        if isinstance(start_date, datetime.datetime):
+            start_date = start_date.date()
+        if isinstance(end_date, datetime.datetime):
+            end_date = end_date.date()
+        if self.end_date_on_project is None or self.end_date_on_project.date() >= end_date:
+            earliest_end = end_date
+        else:
+            earliest_end = self.end_date_on_project.date()
+        latest_start = max(start_date, self.start_date_on_project.date())
+        workdays_in_overlap = len(pd.bdate_range(latest_start, earliest_end))
+        nominal_fte = (self.fte * workdays_in_overlap) / len(pd.bdate_range(start_date, end_date))
+        nominal_fte = float(format(Decimal.from_float(nominal_fte), '.2f'))
+        return nominal_fte
