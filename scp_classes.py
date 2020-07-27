@@ -199,9 +199,10 @@ class Employee:
         self.vacations.sort()
 
     def add_vacations_from_range(self, range_start, range_end):
-        date_range = pd.bdate_range(range_start, range_end)
+        date_range = pd.date_range(range_start, range_end)
         for single_date in date_range:
-            self.add_vacation(single_date.date())
+            if single_date.weekday() < 5 or single_date in self.extra_working_days:
+                self.add_vacation(single_date.date())
 
     def add_sick_leave(self, single_date):
         if isinstance(single_date, datetime.datetime):

@@ -5,7 +5,7 @@ import openpyxl
 import sys
 from dataclasses import fields
 import pandas as pd
-from decimal import Decimal
+# from decimal import Decimal
 
 # local include files
 import credentials as cr
@@ -13,23 +13,6 @@ from scp_classes import Default, BankHoliday, Sprint, EmployeeVacation, Employee
 from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_STATUS_TEXT
 from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, \
     EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
-
-# global variables
-vacations_list = []
-extra_sick_leaves_list = []
-bank_holidays_list = []
-developers_list = []
-sprints_list = []
-defaults_list = []
-extra_working_days_list = []
-employee_obj_list = []
-sprint_obj_list = []
-vacations_obj = []
-bank_holidays_obj = []
-developers_obj = []
-sprints_obj = []
-defaults_obj = []
-employee_leaves_list = []
 
 start_time = time.time()
 
@@ -62,7 +45,7 @@ def load_to_dictionary(full_file_name, sheet_name, load_max_col, load_max_row=50
             continue
         one_row = {}
         for i in range(0, load_max_col):
-            one_row[first_row[i]] = row[i]
+            one_row[keys[i]] = row[i]
         all_rows.append(one_row)
     return all_rows
 
@@ -78,13 +61,12 @@ def load_to_objects(object_class, full_file_name, sheet_name, load_max_col, load
         return all_rows
     try:
         wb = openpyxl.load_workbook(xlsfile, read_only=True, data_only=True)
-    except:
+    except Exception:
         print("Unexpected error:", sys.exc_info()[0])
         return all_rows
-    keys = []
     try:
         sheet = wb[sheet_name]
-    except:
+    except Exception:
         print("Unexpected error:", sys.exc_info()[0])
         return all_rows
     for row in sheet.iter_rows(min_row=2, max_row=load_max_row, min_col=0, max_col=load_max_col, values_only=True):
@@ -142,15 +124,6 @@ def bank_holidays_data_process(list_of_bank_holidays):
     return holidays_obj
 
 
-def who_is_on_holiday(datetime_date):
-    on_holiday = []
-    global employee_leaves_list
-    for employee in employee_leaves_list:
-        if employee.is_on_holiday(datetime_date):
-            on_holiday.append(employee.name)
-    return on_holiday
-
-
 def get_employee_bank_holidays(employee, list_of_employees, list_of_bank_holidays):
     employee_bank_holidays = []
     employee_dict = next((item for item in list_of_employees if item['Name'] == employee), None)
@@ -161,32 +134,6 @@ def get_employee_bank_holidays(employee, list_of_employees, list_of_bank_holiday
                 employee_bank_holidays.append(bank_holiday['Date'].date())
 
     return employee_bank_holidays
-
-
-def load_all_to_dict():
-    global bank_holidays_list
-    global vacations_list
-    global developers_list
-    global sprints_list
-    global defaults_list
-    global extra_sick_leaves_list
-    global extra_working_days_list
-    bank_holidays_list = load_to_dictionary(cr.testexcelfile, 'Bank holidays', 3, 100)
-    vacations_list = load_to_dictionary(cr.testexcelfile, 'Vacations', 16, 200)
-    developers_list = load_to_dictionary(cr.testexcelfile, 'Developers', 5)
-    sprints_list = load_to_dictionary(cr.testexcelfile, 'Sprints', 7, 100)
-    defaults_list = load_to_dictionary(cr.testexcelfile, 'Defaults', 2)
-    extra_sick_leaves_list = load_to_dictionary(cr.testexcelfile, 'Extra sick leave', 3)
-    extra_working_days_list = load_to_dictionary(cr.testexcelfile, 'Extra working days', 3)
-
-
-def load_all_to_object():
-    # global developers_obj
-    global sprints_obj
-    global defaults_obj
-    # developers_obj = load_to_objects(Developer, cr.testexcelfile, 'Developers', 5)
-    sprints_obj = load_to_objects(Sprint, cr.testexcelfile, 'Sprints', 7, 100)
-    defaults_obj = load_to_objects(Default, cr.testexcelfile, 'Defaults', 2)
 
 
 def sprints_data_process(list_of_sprints, list_of_employee_vacations):
@@ -218,28 +165,6 @@ def validate_employees_list(list_of_employees):
     return data_error
 
 
-def test1():
-    global employee_leaves_list
-    for employee_obj in employee_leaves_list:
-        # employee_obj.print_all_vacations()
-        print(employee_obj)
-
-
-def test2():
-    global sprint_details_list
-    for sprint_detail in sprint_details_list:
-        # print(sprint_detail)
-        print(sprint_detail.sprint, sprint_detail.start_date.date(), sprint_detail.end_date.date(),
-              sprint_detail.get_total_fte_available(), sprint_detail.get_total_fte_on_leave(),
-              sprint_detail.get_sprint_capacity())
-
-
-def test3():
-    global developers_list, bank_holidays_list, employee_leaves_list
-    print(get_employee_bank_holidays('Garra Peters', developers_list, bank_holidays_list))
-    print(employee_leaves_list)
-
-
 def test4():
     emp1 = Employee('Bela', 'HU', 0.8, datetime.datetime(2020, 1, 15, 9, 0), datetime.datetime(2020, 7, 31, 17, 00))
     emp1.add_vacation(datetime.datetime(2020, 7, 25, 10, 11))
@@ -257,17 +182,15 @@ def test4():
     print(emp1.get_nominal_fte_in_date_range(datetime.date(2020, 7, 31), datetime.date(2020, 8, 13)))
 
 
-def test5():
-    global employee_obj_list
+def test5(list_of_employee_obj):
     x_date = datetime.date(2020, 12, 12)
-    for item in employee_obj_list:
+    for item in list_of_employee_obj:
         print(item.name, x_date, 'available:', item.is_available(x_date), 'status:',
               EMPLOYEE_STATUS_TEXT[item.status(x_date)])
 
 
-def test6():
-    global sprint_obj_list
-    for item in sprint_obj_list:
+def test6(list_of_sprint_obj):
+    for item in list_of_sprint_obj:
         print(item.sprint, item.start_date.date(), item.end_date.date(), 'FTE available:',
               item.get_total_fte_available(), 'FTE on leave:', item.get_total_fte_on_leave(),
               'Capacity:', item.get_sprint_capacity(),
@@ -279,12 +202,23 @@ def test6():
         #         print(fte_date)
 
 
+def test7(list_of_employee_obj):
+    for employee_obj in list_of_employee_obj:
+        if employee_obj.name == 'Lorant Kovacs':
+            print(employee_obj.extra_working_days)
+            print(EMPLOYEE_STATUS_TEXT[employee_obj.status(datetime.date(2020, 8, 29))])
+
+
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
                           list_of_extra_working_days):
     list_of_employee_objects = []
     for employee in list_of_employees:
         employee_obj = Employee(employee['Name'], employee['Country'], employee['FTE'],
                                 employee['Start date on project'], employee['End date on project'])
+        filtered_extra_working_days = [extra_working_day for extra_working_day in list_of_extra_working_days if
+                                       extra_working_day['Country'] == employee_obj.country]
+        for extra_working_day_record in filtered_extra_working_days:
+            employee_obj.add_extra_working_day(extra_working_day_record['Date'])
         filtered_vacations = [vac for vac in list_of_vacations if vac['EMPLOYEE'] == employee['Name']]
         for vacation_record in filtered_vacations:
             start_date_date = vacation_record['START DATE']
@@ -310,10 +244,6 @@ def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_hol
                                   bank_holiday['Country'] == employee['Country']]
         for bank_holiday_record in filtered_bank_holidays:
             employee_obj.add_bank_holiday(bank_holiday_record['Date'])
-        filtered_extra_working_days = [extra_working_day for extra_working_day in list_of_extra_working_days if
-                                       extra_working_day['Country'] == employee['Country']]
-        for extra_working_day_record in filtered_extra_working_days:
-            employee_obj.add_extra_working_day(extra_working_day_record['Date'])
         list_of_employee_objects.append(employee_obj)
     return list_of_employee_objects
 
@@ -341,32 +271,43 @@ def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
     return list_of_sprint_obj
 
 
+def write_overview_sheet(list_of_sprint_obj, excel_file, sheet_name):
+    pass
+
+
 def write_archive_sheet(list_of_sprint_obj, excel_file, sheet_name):
     pass
 
 
-if __name__ == '__main__':
+def main():
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
     print("#####----------------------------------#####")
-    load_all_to_dict()
+    bank_holidays_list = load_to_dictionary(cr.testexcelfile, 'Bank holidays', 3, 100)
+    vacations_list = load_to_dictionary(cr.testexcelfile, 'Vacations', 16, 200)
+    developers_list = load_to_dictionary(cr.testexcelfile, 'Developers', 5)
+    sprints_list = load_to_dictionary(cr.testexcelfile, 'Sprints', 7, 100)
+    defaults_list = load_to_dictionary(cr.testexcelfile, 'Defaults', 2)
+    extra_sick_leaves_list = load_to_dictionary(cr.testexcelfile, 'Extra sick leave', 3)
+    extra_working_days_list = load_to_dictionary(cr.testexcelfile, 'Extra working days', 3)
     if validate_employees_list(developers_list):
         exit(-1)
-    # employee_leaves_list = vacations_data_process(vacations_list, bank_holidays_list, developers_list)
-    # sprint_details_list = sprints_data_process(sprints_list, employee_leaves_list)
-    # test1()
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
                                               extra_sick_leaves_list, extra_working_days_list)
     sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
-    write_archive_sheet(sprint_obj_list, cr.testexcelfile, 'Archive_List')
-    test6()
+    write_overview_sheet(sprint_obj_list, cr.testexcelfile, 'Overview')
+    write_archive_sheet(sprint_obj_list, cr.testexcelfile, 'Archive')
+    test6(sprint_obj_list)
 
     # print(bank_holidays_obj)
     # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))
-    # load_all_to_object()
 
     # sp1 = sprints[0]
     # sp1.define_workday_dates()
     print("#####----------------------------------#####")
     print("--- Execution time: %s seconds ---" % (time.time() - start_time))
+
+
+if __name__ == '__main__':
+    main()
