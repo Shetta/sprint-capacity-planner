@@ -5,6 +5,8 @@ import openpyxl
 import sys
 from dataclasses import fields
 import pandas as pd
+import numpy as np
+import xlrd
 # from decimal import Decimal
 
 # local include files
@@ -16,6 +18,21 @@ from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SI
     EMPLOYEE_ON_WEEKEND, EMPLOYEE_ON_BANK_HOLIDAY
 
 start_time = time.time()
+
+
+def load_to_dataframe(file_details):
+    full_file_name = file_details['path'] + '/' + file_details['filename']
+    try:
+        df = pd.read_excel(full_file_name, sheet_name=file_details['sheet'], na_filter=False)
+        loaded_columns = df.columns.values
+        expected_columns = np.array(file_details['columns'])
+        if not np.array_equal(loaded_columns, expected_columns):
+            df = "Error: loaded columns doesn't much to expected columns: " + str(file_details['columns'])
+    except FileNotFoundError:
+        df = "Error: File Not Found: " + full_file_name
+    except Exception as e:
+        df = "Error: " + e.__str__()
+    return df
 
 
 def load_to_dictionary(file_details, load_max_col, load_max_row=50):
@@ -281,21 +298,27 @@ def main():
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
     print("#####----------------------------------#####")
-    bank_holidays_list = load_to_dictionary(cfg.bank_holidays_excel, 3, 100)
-    vacations_list = load_to_dictionary(cfg.vacations_excel, 16, 200)
-    developers_list = load_to_dictionary(cfg.team_members_excel, 5)
-    sprints_list = load_to_dictionary(cfg.sprints_excel, 7, 100)
-    defaults_list = load_to_dictionary(cfg.defaults_excel, 2)
-    extra_sick_leaves_list = load_to_dictionary(cfg.extra_sick_leaves_excel, 3)
-    extra_working_days_list = load_to_dictionary(cfg.extra_working_days_excel, 3)
-    if validate_employees_list(developers_list):
-        exit(-1)
-    bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
-    employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
-                                              extra_sick_leaves_list, extra_working_days_list)
-    sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
-    write_overview_sheet(sprint_obj_list, cfg.overview_excel)
-    test6(sprint_obj_list)
+    # bank_holidays_list = load_to_dictionary(cfg.bank_holidays_excel, 3, 100)
+    # vacations_list = load_to_dictionary(cfg.vacations_excel, 16, 200)
+    # developers_list = load_to_dictionary(cfg.team_members_excel, 5)
+    # sprints_list = load_to_dictionary(cfg.sprints_excel, 7, 100)
+    # defaults_list = load_to_dictionary(cfg.defaults_excel, 2)
+    # extra_sick_leaves_list = load_to_dictionary(cfg.extra_sick_leaves_excel, 3)
+    # extra_working_days_list = load_to_dictionary(cfg.extra_working_days_excel, 3)
+    # if validate_employees_list(developers_list):
+    #     exit(-1)
+    # bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
+    # employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
+    #                                           extra_sick_leaves_list, extra_working_days_list)
+    # sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
+    # write_overview_sheet(sprint_obj_list, cfg.overview_excel)
+    # test6(sprint_obj_list)
+
+    bank_holidays_df = load_to_dataframe(cfg.bank_holidays_excel)
+    if isinstance(bank_holidays_df, pd.DataFrame):
+        print(bank_holidays_df.loc[0:17, ['Country', 'Date', 'Comment']])
+    else:
+        print(bank_holidays_df)
 
     # print(bank_holidays_obj)
     # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))

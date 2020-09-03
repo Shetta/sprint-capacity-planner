@@ -2,7 +2,8 @@
 
 bank_holidays_excel = {'path': '.',
                        'filename': 'capacity-planner-test.xlsx',
-                       'sheet': 'Bank holidays'}
+                       'sheet': 'Bank holidays',
+                       'columns': ['Country', 'Date', 'Comment']}
 
 vacations_excel = {'path': '.',
                    'filename': 'capacity-planner-test.xlsx',
