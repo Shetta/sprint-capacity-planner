@@ -23,6 +23,21 @@ __pycache__/
 .idea/dynamic.xml
 .idea/uiDesigner.xml
 
+# Ignore pyenv files.
+.python-version
+
+# Ignore virtualenv environments.
+.venv*/
+Lib/
+Scripts/
+
+# Ignore settings for various IDEs.
+.project/
+.pydevproject/
+.vscode/
+nbproject/
+*.code-workspace
+
 # project specific:
 credentials.py
 *.csv
