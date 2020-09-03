@@ -9,6 +9,7 @@ import pandas as pd
 
 # local include files
 import credentials as cr
+import config as cfg
 from scp_classes import Default, BankHoliday, Sprint, EmployeeVacation, Employee
 from scp_mapping import VACATION_TYPE_SICK_LEAVE, EMPLOYEE_STATUS_TEXT
 from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SICK_LEAVE, EMPLOYEE_NOT_ON_PROJECT, \
@@ -17,8 +18,9 @@ from scp_mapping import EMPLOYEE_AVAILABLE, EMPLOYEE_ON_VACATION, EMPLOYEE_ON_SI
 start_time = time.time()
 
 
-def load_to_dictionary(full_file_name, sheet_name, load_max_col, load_max_row=50):
-    xlsfile = full_file_name['path'] + '/' + full_file_name['filename']
+def load_to_dictionary(file_details, load_max_col, load_max_row=50):
+    xlsfile = file_details['path'] + '/' + file_details['filename']
+    sheet_name = file_details['sheet']
     all_rows = []
     if load_max_col < 1:
         all_rows[0] = 'load_max_col must be greater than 0'
@@ -271,11 +273,7 @@ def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
     return list_of_sprint_obj
 
 
-def write_overview_sheet(list_of_sprint_obj, excel_file, sheet_name):
-    pass
-
-
-def write_archive_sheet(list_of_sprint_obj, excel_file, sheet_name):
+def write_overview_sheet(list_of_sprint_obj, file_details):
     pass
 
 
@@ -283,21 +281,20 @@ def main():
     now = datetime.datetime.now()
     print("Started at:", now.strftime("%Y-%m-%d %H:%M:%S"))
     print("#####----------------------------------#####")
-    bank_holidays_list = load_to_dictionary(cr.testexcelfile, 'Bank holidays', 3, 100)
-    vacations_list = load_to_dictionary(cr.testexcelfile, 'Vacations', 16, 200)
-    developers_list = load_to_dictionary(cr.testexcelfile, 'Developers', 5)
-    sprints_list = load_to_dictionary(cr.testexcelfile, 'Sprints', 7, 100)
-    defaults_list = load_to_dictionary(cr.testexcelfile, 'Defaults', 2)
-    extra_sick_leaves_list = load_to_dictionary(cr.testexcelfile, 'Extra sick leave', 3)
-    extra_working_days_list = load_to_dictionary(cr.testexcelfile, 'Extra working days', 3)
+    bank_holidays_list = load_to_dictionary(cfg.bank_holidays_excel, 3, 100)
+    vacations_list = load_to_dictionary(cfg.vacations_excel, 16, 200)
+    developers_list = load_to_dictionary(cfg.team_members_excel, 5)
+    sprints_list = load_to_dictionary(cfg.sprints_excel, 7, 100)
+    defaults_list = load_to_dictionary(cfg.defaults_excel, 2)
+    extra_sick_leaves_list = load_to_dictionary(cfg.extra_sick_leaves_excel, 3)
+    extra_working_days_list = load_to_dictionary(cfg.extra_working_days_excel, 3)
     if validate_employees_list(developers_list):
         exit(-1)
     bank_holidays_obj = bank_holidays_data_process(bank_holidays_list)
     employee_obj_list = employee_data_process(developers_list, vacations_list, bank_holidays_list,
                                               extra_sick_leaves_list, extra_working_days_list)
     sprint_obj_list = sprint_and_employee_data_process(sprints_list, employee_obj_list)
-    write_overview_sheet(sprint_obj_list, cr.testexcelfile, 'Overview')
-    write_archive_sheet(sprint_obj_list, cr.testexcelfile, 'Archive')
+    write_overview_sheet(sprint_obj_list, cfg.overview_excel)
     test6(sprint_obj_list)
 
     # print(bank_holidays_obj)
