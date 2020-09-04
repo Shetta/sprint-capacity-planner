@@ -22,16 +22,36 @@ start_time = time.time()
 
 def load_to_dataframe(file_details):
     full_file_name = file_details['path'] + '/' + file_details['filename']
+    skip_rows = 0
     try:
         df = pd.read_excel(full_file_name, sheet_name=file_details['sheet'], na_filter=False)
+        for i in range(len(df)):
+            if df.iloc[i, 0] == "":
+                skip_rows += 1
+            else:
+                if skip_rows > 0:
+                    skip_rows += 1
+                break
+        df = pd.read_excel(full_file_name, sheet_name=file_details['sheet'], na_filter=False, skiprows=skip_rows)
         loaded_columns = df.columns.values
         expected_columns = np.array(file_details['columns'])
         if not np.array_equal(loaded_columns, expected_columns):
-            df = "Error: loaded columns doesn't much to expected columns: " + str(file_details['columns'])
+            df = "Sheet Process Error: " + file_details[
+                'sheet'] + ": loaded columns " + str(loaded_columns) + " doesn't much to expected columns " + str(
+                file_details['columns'])
     except FileNotFoundError:
-        df = "Error: File Not Found: " + full_file_name
+        df = "File Open Error: File Not Found: " + full_file_name
     except Exception as e:
-        df = "Error: " + e.__str__()
+        df = "File Open Error: " + e.__str__() + " File: " + full_file_name
+    return df
+
+
+def load_to_dataframe_with_exit_on_error(file_details):
+    df = load_to_dataframe(file_details)
+    if not isinstance(df, pd.DataFrame):
+        # print error message and exit
+        print(df)
+        exit(1)
     return df
 
 
@@ -158,7 +178,7 @@ def get_employee_bank_holidays(employee, list_of_employees, list_of_bank_holiday
 def sprints_data_process(list_of_sprints, list_of_employee_vacations):
     list_of_sprint_details = []
     for sprint in list_of_sprints:
-        sprint_details_obj = Sprint(sprint['Sprint'], sprint['Start date'], sprint['End date'])
+        sprint_details_obj = Sprint(sprint['Sprint ID'], sprint['Start date'], sprint['End date'])
         date_range = pd.bdate_range(sprint['Start date'], sprint['End date'])
         for single_date in date_range:
             for vacation_obj in list_of_employee_vacations:
@@ -221,13 +241,6 @@ def test6(list_of_sprint_obj):
         #         print(fte_date)
 
 
-def test7(list_of_employee_obj):
-    for employee_obj in list_of_employee_obj:
-        if employee_obj.name == 'Lorant Kovacs':
-            print(employee_obj.extra_working_days)
-            print(EMPLOYEE_STATUS_TEXT[employee_obj.status(datetime.date(2020, 8, 29))])
-
-
 def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_holidays, list_of_extra_sick_leaves,
                           list_of_extra_working_days):
     list_of_employee_objects = []
@@ -270,7 +283,7 @@ def employee_data_process(list_of_employees, list_of_vacations, list_of_bank_hol
 def sprint_and_employee_data_process(list_of_sprints, list_of_employee_obj):
     list_of_sprint_obj = []
     for sprint in list_of_sprints:
-        sprint_obj = Sprint(sprint['Sprint'], sprint['Start date'], sprint['End date'])
+        sprint_obj = Sprint(sprint['Sprint ID'], sprint['Start date'], sprint['End date'])
         date_range = pd.date_range(sprint_obj.start_date, sprint_obj.end_date)
         for employee_obj in list_of_employee_obj:
             if employee_obj.country == 'HU':
@@ -314,11 +327,20 @@ def main():
     # write_overview_sheet(sprint_obj_list, cfg.overview_excel)
     # test6(sprint_obj_list)
 
-    bank_holidays_df = load_to_dataframe(cfg.bank_holidays_excel)
-    if isinstance(bank_holidays_df, pd.DataFrame):
-        print(bank_holidays_df.loc[0:17, ['Country', 'Date', 'Comment']])
-    else:
-        print(bank_holidays_df)
+    bank_holidays_df = load_to_dataframe_with_exit_on_error(cfg.bank_holidays_excel)
+    print(bank_holidays_df.head(100))
+    team_members_df = load_to_dataframe_with_exit_on_error(cfg.team_members_excel)
+    print(team_members_df.head(100))
+    sprints_df = load_to_dataframe_with_exit_on_error(cfg.sprints_excel)
+    print(sprints_df.head(100))
+    extra_sick_leaves_df = load_to_dataframe_with_exit_on_error(cfg.extra_sick_leaves_excel)
+    print(extra_sick_leaves_df.head(100))
+    extra_working_days_df = load_to_dataframe_with_exit_on_error(cfg.extra_working_days_excel)
+    print(extra_working_days_df.head(100))
+    extra_working_days_df = load_to_dataframe_with_exit_on_error(cfg.extra_working_days_excel)
+    print(extra_working_days_df.head(100))
+    vacation_requests_df = load_to_dataframe_with_exit_on_error(cfg.vacation_requests_excel)
+    print(vacation_requests_df.head(100))
 
     # print(bank_holidays_obj)
     # print(bank_holidays_obj.is_holiday(datetime.date(2020, 12, 25)))
